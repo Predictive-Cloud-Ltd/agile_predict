@@ -379,6 +379,9 @@ class Command(BaseCommand):
                         # Add required columns before plotting
                         results["forecast_created"] = test_X["created_at"]
                         results["target_time"] = test_X.index
+                        results["next_agile"] = (test_X.index >= test_X["ag_start"]) & (
+                            test_X.index < test_X["ag_end"]
+                        )
                         results["error"] = (results["day_ahead"] - results["pred"]) * factor
 
                         def save_plot(fig, name):
@@ -434,8 +437,20 @@ class Command(BaseCommand):
 
                         # 1. Prediction vs Actual over Time
                         fig, ax = plt.subplots(figsize=(16, 6))
-                        subset = results.sort_values("target_time")
+
+                        subset = results[results["next_agile"]].sort_values("target_time")
                         ax.plot(subset["target_time"], subset["day_ahead"], label="Actual", color="black")
+                        ax.plot(
+                            subset["target_time"],
+                            subset["pred"],
+                            label="Predicted",
+                            alpha=0.4,
+                            color="red",
+                            lw=0,
+                            marker="o",
+                        )
+
+                        subset = results[~results["next_agile"]].sort_values("target_time")
                         sc = ax.scatter(
                             x=subset["target_time"],
                             y=subset["pred"],
@@ -487,7 +502,7 @@ class Command(BaseCommand):
 
                         # 4. Forecast Error by Horizon
                         fig, ax = plt.subplots(figsize=(8, 6))
-                        sns.kdeplot(
+                        kde = sns.kdeplot(
                             data=results,
                             x="dt",
                             y="error",
@@ -496,15 +511,19 @@ class Command(BaseCommand):
                             levels=10,
                             ax=ax,
                         )
-                        sns.scatterplot(
-                            data=results,
-                            x="dt",
-                            y=residuals,
-                            alpha=0.3,
-                            ax=ax,
-                            color="grey",
-                            linewidth=0,
-                        )
+
+                        # Add a colorbar
+                        # cbar = plt.colorbar(kde.collections[0], ax=ax)
+                        # cbar.set_label("Density")
+                        # sns.scatterplot(
+                        #     data=results,
+                        #     x="dt",
+                        #     y=residuals,
+                        #     alpha=0.3,
+                        #     ax=ax,
+                        #     color="grey",
+                        #     linewidth=0,
+                        # )
                         ax.set_title("2D KDE: Forecast Error by Horizon")
                         ax.set_xlabel("Days Ahead (dt)")
                         ax.set_ylabel("Error (Actual - Predicted) [p/kWh]")
