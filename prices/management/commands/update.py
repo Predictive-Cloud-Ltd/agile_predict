@@ -32,6 +32,24 @@ MIN_HIST = 7
 MAX_HIST = 28
 MAX_TEST_X = 20000
 
+log_dir = os.path.join(os.getcwd(), "logs")
+os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, "update.log")
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+file_handler = logging.FileHandler(log_file)
+console_handler = logging.StreamHandler()
+
+formatter = logging.Formatter("%(asctime)s %(levelname)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+file_handler.setFormatter(formatter)
+console_handler.setFormatter(formatter)
+
+if not logger.handlers:
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+
 
 def lighten_cmap(cmap_name="viridis", amount=0.5):
     base = cm.get_cmap(cmap_name)
@@ -114,23 +132,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Setup logging
-        log_dir = os.path.join(os.getcwd(), "logs")
-        os.makedirs(log_dir, exist_ok=True)
-        log_file = os.path.join(log_dir, "update.log")
-
-        logger = logging.getLogger(__name__)
-        logger.setLevel(logging.INFO)
-
-        file_handler = logging.FileHandler(log_file)
-        console_handler = logging.StreamHandler()
-
-        formatter = logging.Formatter("%(asctime)s %(levelname)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-        file_handler.setFormatter(formatter)
-        console_handler.setFormatter(formatter)
-
-        if not logger.handlers:
-            logger.addHandler(file_handler)
-            logger.addHandler(console_handler)
 
         debug = options.get("debug", False)
 
@@ -273,7 +274,7 @@ class Command(BaseCommand):
                         )
 
                         if debug:
-                            logger.info("Forecasts Database:\n{ff.to_string()}")
+                            logger.info(f"Forecasts Database:\n{ff.to_string()}")
 
                         # df is the full dataset
                         df = (
