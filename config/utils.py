@@ -494,7 +494,7 @@ class DataSet:
 
 def get_agile(start=pd.Timestamp("2023-07-01"), tz="GB", region="G"):
     start = pd.Timestamp(start).tz_convert("UTC")
-    product = "AGILE-22-08-31"
+    product = "AGILE-24-10-01"
     df = pd.DataFrame()
     url = f"{OCTOPUS_PRODUCT_URL}{product}"
 
