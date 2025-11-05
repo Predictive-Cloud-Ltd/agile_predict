@@ -1,0 +1,87 @@
+name: Build and Push Docker Image to GHCR
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize]
+  schedule:
+    - cron: "0 2 * * *" # Runs at 2 AM UTC daily
+  workflow_dispatch:
+    inputs:
+      custom_tag:
+        description: "Custom tag for the image"
+        required: false
+        default: ""
+
+env:
+  IMAGE_NAME: ghcr.io/predictive-cloud-ltd/agile-predict
+
+jobs:
+  build:
+    permissions:
+      packages: write
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine Image Tag
+        id: determine_tag
+        run: |
+          if [ -n "${{ github.event.inputs.custom_tag }}" ]; then
+            echo "tag=${{ github.event.inputs.custom_tag }}" >> $GITHUB_OUTPUT
+            echo "skip_latest=true" >> $GITHUB_OUTPUT
+          elif [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+            # Use date-based versioning for main branch
+            TAG=$(date +%Y.%m.%d)
+            echo "tag=${TAG}" >> $GITHUB_OUTPUT
+            echo "skip_latest=false" >> $GITHUB_OUTPUT
+          else
+            # For PRs, use a preview tag
+            SHORT_HASH=${GITHUB_SHA::7}
+            echo "tag=preview-${SHORT_HASH}" >> $GITHUB_OUTPUT
+            echo "skip_latest=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and Push Multi-Platform Image
+        run: |
+          docker buildx build --push \
+            --platform linux/amd64,linux/arm64/v8 \
+            --cache-from=type=registry,ref=${{ env.IMAGE_NAME }}:buildcache \
+            --cache-to=type=registry,mode=max,ref=${{ env.IMAGE_NAME }}:buildcache \
+            -t ${{ env.IMAGE_NAME }}:${{ steps.determine_tag.outputs.tag }} \
+            .
+
+          # Tag as latest if on main branch and not using custom tag
+          if [ "${GITHUB_REF}" = "refs/heads/main" ] && [ "${{ steps.determine_tag.outputs.skip_latest }}" = "false" ]; then
+            docker buildx imagetools create \
+              --tag ${{ env.IMAGE_NAME }}:latest \
+              ${{ env.IMAGE_NAME }}:${{ steps.determine_tag.outputs.tag }}
+          fi
+
+      - name: Output Image Details
+        run: |
+          echo "Built image: ${{ env.IMAGE_NAME }}:${{ steps.determine_tag.outputs.tag }}"
+          if [ "${{ steps.determine_tag.outputs.skip_latest }}" = "false" ]; then
+            echo "Also tagged as: ${{ env.IMAGE_NAME }}:latest"
+          fi
