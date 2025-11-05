@@ -129,7 +129,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "GB"
+TIME_ZONE = env.str("TZ", default="Europe/London")
 
 USE_I18N = True
 
