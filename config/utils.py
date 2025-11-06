@@ -102,7 +102,7 @@ def get_latest_history(start):
     delta = int((pd.Timestamp(start) - pd.Timestamp("2023-07-01", tz="GB")).total_seconds() / 1800)
     history_data = [
         {
-            "url": "https://api.nationalgrideso.com/api/3/action/datastore_search_sql",
+            "url": "https://api.neso.energy/api/3/action/datastore_search_sql",
             "params": parse.urlencode(
                 {
                     "sql": f"""SELECT COUNT(*) OVER () AS _count, * FROM "bf5ab335-9b40-4ea4-b93a-ab4af7bce003" WHERE "SETTLEMENT_DATE" >= '{pd.Timestamp(start).strftime("%Y-%m-%d")}T00:00:00Z' ORDER BY "_id" ASC LIMIT 20000"""
@@ -114,7 +114,7 @@ def get_latest_history(start):
             "cols": "ND",
         },
         {
-            "url": "https://api.nationalgrideso.com/api/3/action/datastore_search_sql",
+            "url": "https://api.neso.energy/api/3/action/datastore_search_sql",
             "params": parse.urlencode(
                 {
                     "sql": f"""SELECT COUNT(*) OVER () AS _count, * FROM "f6d02c0f-957b-48cb-82ee-09003f2ba759" WHERE "SETTLEMENT_DATE" >= '{pd.Timestamp(start).strftime("%Y-%m-%d")}T00:00:00Z' ORDER BY "_id" ASC LIMIT 20000"""
@@ -137,7 +137,7 @@ def get_latest_history(start):
             "rename": ["ND"],
         },
         {
-            "url": "https://api.nationalgrideso.com/api/3/action/datastore_search_sql",
+            "url": "https://api.neso.energy/api/3/action/datastore_search_sql",
             "params": parse.urlencode(
                 {
                     "sql": f"""SELECT COUNT(*) OVER () AS _count, * FROM "7524ec65-f782-4258-aaf8-5b926c17b966" WHERE "Datetime_GMT" >= '{pd.Timestamp(start).strftime("%Y-%m-%d")}T00:00:00Z' ORDER BY "_id" ASC LIMIT 40000"""
@@ -150,7 +150,7 @@ def get_latest_history(start):
             "rename": ["bm_wind"],
         },
         {
-            "url": "https://api.nationalgrideso.com/api/3/action/datastore_search_sql",
+            "url": "https://api.neso.energy/api/3/action/datastore_search_sql",
             "params": parse.urlencode(
                 {
                     "sql": f"""SELECT COUNT(*) OVER () AS _count, * FROM "f93d1835-75bc-43e5-84ad-12472b180a98" WHERE "DATETIME" >= '{pd.Timestamp(start).strftime("%Y-%m-%d")}' ORDER BY "_id" ASC LIMIT 20000"""
@@ -237,7 +237,7 @@ def get_latest_forecast():
 
     forecast_data = [
         {
-            "url": "https://api.nationalgrideso.com/api/3/action/datastore_search?resource_id=93c3048e-1dab-4057-a2a9-417540583929&limit=1000",
+            "url": "https://api.neso.energy/api/3/action/datastore_search?resource_id=93c3048e-1dab-4057-a2a9-417540583929&limit=1000",
             "record_path": ["result", "records"],
             "tz": "UTC",
             "date_col": "Datetime",
@@ -245,7 +245,7 @@ def get_latest_forecast():
             "rename": ["bm_wind"],
         },
         {
-            "url": "https://api.nationalgrideso.com/api/3/action/datastore_search?resource_id=b2f03146-f05d-4824-a663-3a4f36090c71&limit=1000",
+            "url": "https://api.neso.energy/api/3/action/datastore_search?resource_id=b2f03146-f05d-4824-a663-3a4f36090c71&limit=1000",
             "record_path": ["result", "records"],
             "tz": "UTC",
             "date_col": "Datetime_GMT",
@@ -253,7 +253,7 @@ def get_latest_forecast():
             "rename": ["da_wind"],
         },
         {
-            "url": "https://api.nationalgrideso.com/api/3/action/datastore_search?resource_id=db6c038f-98af-4570-ab60-24d71ebd0ae5&limit=1000",
+            "url": "https://api.neso.energy/api/3/action/datastore_search?resource_id=db6c038f-98af-4570-ab60-24d71ebd0ae5&limit=1000",
             "record_path": ["result", "records"],
             "tz": "UTC",
             "cols": ["EMBEDDED_SOLAR_FORECAST", "EMBEDDED_WIND_FORECAST"],
@@ -262,7 +262,7 @@ def get_latest_forecast():
             "time_col": "TIME_GMT",
         },
         {
-            "url": "https://api.nationalgrideso.com/api/3/action/datastore_search?resource_id=7c0411cd-2714-4bb5-a408-adb065edf34d&limit=5000",
+            "url": "https://api.neso.energy/api/3/action/datastore_search?resource_id=7c0411cd-2714-4bb5-a408-adb065edf34d&limit=5000",
             "record_path": ["result", "records"],
             "date_col": "GDATETIME",
             "tz": "UTC",
