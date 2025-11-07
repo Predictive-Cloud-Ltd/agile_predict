@@ -128,31 +128,40 @@ class Command(BaseCommand):
             ignore_forecast = [int(x) for x in options.get("ignore_forecast", [])]
 
         # Clean any invalid forecasts
+        # Keep the last 10 forecasts regardless of size to allow data accumulation
+        # Only apply size/age thresholds to older forecasts
         if debug:
             logger.info(f"Max days: {max_days}")
 
-            logger.info(f"  ID  |       Name       |  #FD  |   #AD   | Days |")
-            logger.info(f"------+------------------+-------+---------+------+")
+            logger.info(f"  ID  |       Name       |  #FD  |   #AD   | Days | Status")
+            logger.info(f"------+------------------+-------+---------+------+----------")
         keep = []
-        for f in Forecasts.objects.all().order_by("-created_at"):
+        all_forecasts = list(Forecasts.objects.all().order_by("-created_at"))
+        for idx, f in enumerate(all_forecasts):
             fd = ForecastData.objects.filter(forecast=f)
             ad = AgileData.objects.filter(forecast=f)
             dt = pd.to_datetime(f.name).tz_localize("GB")
             days = (pd.Timestamp.now(tz="GB") - dt).days
-            if fd.count() < min_fd or ad.count() < min_ad:
-                fail = " <- Fail"
+
+            # Always keep the 10 most recent forecasts
+            if idx < 10:
+                keep.append(f.id)
+                fail = f"Keep ({idx+1}/10)"
+            # For older forecasts, apply size and age thresholds
+            elif fd.count() < min_fd or ad.count() < min_ad:
+                fail = "Delete: Size"
+            elif days >= max_days * 2:
+                fail = "Delete: Old"
             else:
-                if days < max_days * 2:
-                    keep.append(f.id)
-                    fail = ""
-                else:
-                    fail = "<- Old"
+                keep.append(f.id)
+                fail = "Keep: Valid"
+
             if debug:
                 logger.info(f"{f.id:5d} | {f.name} | {fd.count():5d} | {ad.count():7d} | {days:4d} | {fail}")
 
         forecasts_to_delete = Forecasts.objects.exclude(id__in=keep)
         if debug:
-            logger.info(f"\nDeleting ({forecasts_to_delete})\n")
+            logger.info(f"\nDeleting {forecasts_to_delete.count()} forecasts\n")
         forecasts_to_delete.delete()
 
         prices, start = model_to_df(PriceHistory)

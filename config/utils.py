@@ -233,7 +233,7 @@ def get_latest_history(start):
 
 def get_latest_forecast():
     ndf_from = pd.Timestamp.now().normalize().strftime("%Y-%m-%d")
-    ndf_to = (pd.Timestamp.now().normalize() + pd.Timedelta("24h")).strftime("%Y-%m-%d")
+    ndf_to = (pd.Timestamp.now().normalize() + pd.Timedelta("14 days")).strftime("%Y-%m-%d")
 
     forecast_data = [
         {

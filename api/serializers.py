@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from prices.models import AgileData, Forecasts
 import pandas as pd
+import math
 
 
 # These are the serializers for the bulk view
@@ -10,6 +11,14 @@ class DataSerializer(serializers.ModelSerializer):
     class Meta:
         model = AgileData
         fields = ["date_time", "agile_pred", "agile_low", "agile_high", "region"]
+
+    def to_representation(self, instance):
+        """Convert NaN values to None for JSON compliance"""
+        data = super().to_representation(instance)
+        for field in ['agile_pred', 'agile_low', 'agile_high']:
+            if field in data and isinstance(data[field], float) and math.isnan(data[field]):
+                data[field] = None
+        return data
 
 
 class PriceForecastSerializer(serializers.ModelSerializer):
@@ -45,6 +54,14 @@ class FilteredDataSerializer(serializers.ModelSerializer):
             self.fields.pop("agile_high")
 
         # Use the context_param as needed in the serializer
+
+    def to_representation(self, instance):
+        """Convert NaN values to None for JSON compliance"""
+        data = super().to_representation(instance)
+        for field in ['agile_pred', 'agile_low', 'agile_high']:
+            if field in data and isinstance(data[field], float) and math.isnan(data[field]):
+                data[field] = None
+        return data
 
 
 class PriceForecastRegionSerializer(serializers.ModelSerializer):
