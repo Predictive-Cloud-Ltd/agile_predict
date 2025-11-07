@@ -346,6 +346,9 @@ class Command(BaseCommand):
 
                         results = test_X[["dt", "day_ahead"]].copy()
                         results["pred"] = xg_model.predict(test_X[features])
+                    else:
+                        # No existing forecasts for training - use default scores
+                        scores = np.array([0.0])
 
                     fc["weekend"] = (fc.index.day_of_week >= 5).astype(int)
                     fc["days_ago"] = 0
